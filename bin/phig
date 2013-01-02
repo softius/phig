@@ -1,0 +1,29 @@
+#!/usr/bin/env php
+<?php
+require_once dirname(__DIR__) .'/vendor/autoload.php';
+
+/**
+ * You may replace this array with a confugiration part from your project 
+ * or store it in a external file if necessary
+ */
+$phig_config = array(
+	// where to store filesystem entries
+	'filesystem_db' => __DIR__ .'/.phig_db',
+	// where the migration classes (files) are located
+	'migration_dir' => dirname(__DIR__) .'/migrations',
+);
+
+$mm = new \Phig\MigrationManager();
+$mm->setAdapter(new \Phig\Adapter\Filesystem($phig_config['filesystem_db']));
+$mm->setFilter(new \Phig\Filter\DatetimeFilter(new \DirectoryIterator($phig_config['migration_dir'])));
+
+$app = new \Phig\Application();
+$app->setHelperSet(
+		new \Symfony\Component\Console\Helper\HelperSet(
+			array(
+				'mm' => new \Phig\Command\Helper\MigrationManagerHelper($mm)
+			)
+		)
+);
+$app->initCommands();
+$app->run();

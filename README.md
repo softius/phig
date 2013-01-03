@@ -5,8 +5,8 @@ Phig
 
 The aims of phig are:
 
-* to be database framework independent: **phig** users must not have a background on  particular frameworks or libraries to get started.
-* provide solid migration mechanism that can be applied to any project
+* to be database framework independent: is not necessary to have background on  a particular framework or library to get started.
+* provide solid migration mechanism, embeddable to any project
 
 PHP 5.3+ is required.
 
@@ -17,7 +17,7 @@ Installation
 ``` JSON
 	{
     	"require": {
-        	"softius/phig": "*"
+        	"softius/phig": "*@dev"
 	    }
 	}
 ```
@@ -79,24 +79,23 @@ If you would like to view the results of any of the commands above without actua
 
 Writing a migration
 --------------------
-Migrations are nothing more but classes in pure PHP code. However there that constraints that you should be aware about:
+Migrations are nothing more but classes in PHP, with the following constraints that you should be aware before starting writing code:
 
 * All migrations must be placed in a single directory. 
-* Any migration class must extend the `MigratableInterface` and thus the methods `up` and `down`
-
-Before proceeding it is important to understand the meaning of `up` and `down` methods. The `up` method is called when executing an upwards migrations while the `down` method is called on downwards migrations and rollbacks. In other words, the `up` method is called to create a change while `down` method of the same class is called to reverse that change.
+* Any migration class must extend the `MigratableInterface` and thus the methods `up` and `down`. The `up` method is called when executing an upwards migrations while the `down` method is called on downwards migrations and rollbacks. In other words, the `up` method is called to create a change while `down` method of the same class is called to reverse that change.
+* The filename of the migration is important since it is used as a reference hash for **phig** operations. While it is possible to use either datetime or a sequence (integer i.e. build number) or even a versioning scheme, I am suggesting to follow the datetime pattern. 
 
 Here is an example
 
 ``` PHP
-	class Migration_Example extends MigratableInterface
+	class MigrationExample extends MigratableInterface
 	{
-		public class up()
+		public method up()
 		{
 			create_table('users');
 		}
 		
-		public class down()
+		public method down()
 		{
 			destroy_table('users');
 		}
@@ -106,7 +105,8 @@ Here is an example
 TODO
 ----
 * Provide abstract classes for PDO Drivers and Doctrine library
-* Improve configuration
+* Improve configuration / add section in documentation
+* Allow class names to be defined (and hence discovered) in migration filename i.e. `20121230185208-MigrationExample` (instead of `20121230185208.php`) 
 * Support more than one migration folder
 * Add more examples in section *Writing a migration*
 

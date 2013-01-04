@@ -74,15 +74,6 @@ class Filesystem implements AdapterInterface
 	{
 		return $this->migrations;
 	}
-	
-	/**
-	 * Returns the reference of the greatest migrations
-	 * @return string
-	 */
-	public function getGreatestMigration()
-	{
-		return (string) end(array_keys($this->migrations));
-	}
 
 	/**
 	 * Adds the provided migration with the given reference number to the list 

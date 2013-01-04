@@ -130,10 +130,13 @@ class MigrationManager
 		return $migrations;
 	}
 	
+	/**
+	 * Returns the reference number of the greatest migration
+	 * @return string
+	 */
 	public function getGreatestMigration()
 	{
-		// @todo: shall we wrap this to local getExecuted migrations
-		return $this->getAdapter()->getGreatestMigration();
+		return (string) end(array_keys($this->getExecutedMigrations()));
 	}
 	
 	/**

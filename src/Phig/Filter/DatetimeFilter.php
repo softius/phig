@@ -39,12 +39,7 @@ class DatetimeFilter extends \FilterIterator
 
 	public function accept()
 	{
-		$migration_file = $this->getInnerIterator()->current();
-		if ( $migration_file->isDot() ) {
-			return false;
-		}
-		
-		$version = $migration_file->getBasename( '.' . $migration_file->getExtension() );
+		$version = $this->getInnerIterator()->current();
 		if (null === $this->to_version)
 			$accept = ( self::compare($version, $this->from_version) >= 0 );
 		else 

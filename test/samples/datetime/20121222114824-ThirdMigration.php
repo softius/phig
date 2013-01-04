@@ -1,6 +1,6 @@
 <?php
 
-class M20121222114824 implements \Phig\MigratableInterface
+class ThirdMigration implements \Phig\MigratableInterface
 {
 	public function up()
 	{

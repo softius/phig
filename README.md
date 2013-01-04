@@ -88,6 +88,7 @@ Migrations are nothing more but classes in PHP, with the following constraints t
 Here is an example
 
 ``` PHP
+	// yourproject/migrations/20130104152443-MigrationExample.php
 	class MigrationExample extends MigratableInterface
 	{
 		public method up()
@@ -106,7 +107,7 @@ TODO
 ----
 * Provide abstract classes for PDO Drivers and Doctrine library
 * Improve configuration / add section in documentation
-* Allow class names to be defined (and hence discovered) in migration filename i.e. `20121230185208-MigrationExample` (instead of `20121230185208.php`) 
+* ~~Allow class names to be defined (and hence discovered) in migration filename i.e. `20121230185208-MigrationExample` (instead of `20121230185208.php`)~~
 * Support more than one migration folder
 * Add more examples in section *Writing a migration*
 

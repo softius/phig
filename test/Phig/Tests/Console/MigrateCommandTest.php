@@ -12,7 +12,7 @@ class MigrateCommandTest extends \PHPUnit_Framework_TestCase
 	{
 		$mm = new \Phig\MigrationManager();
 		$mm->setAdapter(new \Phig\Tests\Adapter\Filesystem(TEST_DIR .'/samples/data.test'));
-		$mm->setFilter(new \Phig\Filter\DatetimeFilter(new \DirectoryIterator(TEST_DIR.'/samples/datetime')));
+		$mm->setFilter(new \Phig\Filter\DatetimeFilter(new \Phig\MigrationStepIterator(TEST_DIR.'/samples/datetime')));
 		
 		$app = new \Phig\Application();
 		$app->setHelperSet(

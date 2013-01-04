@@ -1,6 +1,6 @@
 <?php
 
-class M20121222114448 implements \Phig\MigratableInterface
+class FirstMigration implements \Phig\MigratableInterface
 {
 	public function up()
 	{

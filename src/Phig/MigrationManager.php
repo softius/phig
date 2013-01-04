@@ -84,36 +84,28 @@ class MigrationManager
 			$filter->setFromVersion($target);
 			$filter->setToVersion($this->getGreatestMigration());
 		}
-		
-		// array to hold <migration ref> => <migration full path>
-		$migration_refs = array();
-		foreach ($filter as $migration_file) {
-			$migration_refs[$migration_file->getBasename('.' . $migration_file->getExtension())] = $migration_file->getPathName();
-		}
+
+		$migration_steps = $this->getMigrationSteps();
 
 		// migrations to be executed
 		$to_execute = array();
 		if ($this->isRollback($target)) {
 			// rollback: execute the common part of $executed and $migration_refs
 			$executed = $this->getExecutedMigrations();
-			foreach($migration_refs as $ref => $migration_class) {
+			foreach($migration_steps as $ref => $migration_class) {
 				if (array_key_exists($ref, $executed)) {
 					$to_execute[] = $ref;
 				}
 			}
 		} else {
 			// migration: execute what's missing - the different of $executed and $available
-			$to_execute = array_diff(array_keys($migration_refs), array_keys($this->getExecutedMigrations()));
+			$to_execute = array_diff(array_keys($migration_steps), array_keys($this->getExecutedMigrations()));
 		}
 		
-		// go through $to_execute, load class file and build new class
+		// go through $to_execute and find the migration steps
 		$migrations = array();
 		foreach ($to_execute as $ref) {
-			$migration_file = $migration_refs[$ref];
-			
-			require_once $migration_file;
-			$class_name = 'M' . $ref;
-			$migrations[$ref] = new $class_name();
+			$migrations[$ref] = $migration_steps[$ref];
 		}
 		
 		// sort migrations according to filter and target
@@ -174,19 +166,12 @@ class MigrationManager
 	 */
 	public function rollback($steps=1, $redo=false)
 	{
-		// @todo make this a method?
-		$filter = $this->getFilter();
-		$migration_refs = array();
-		foreach ($filter as $migration_file) {
-			$migration_refs[$migration_file->getBasename('.' . $migration_file->getExtension())] = $migration_file->getPathName();
-		}
-		
 		$migrations = array_slice($this->getExecutedMigrations(), -$steps, null, true);
 		
+		$migration_steps = $this->getMigrationSteps();
 		$to_execute = array();
 		foreach ($migrations as $ref => $migration_class) {
-			require_once $migration_refs[$ref];
-			$to_execute[$ref] = new $migration_class();
+			$to_execute[$ref] = $migration_steps[$ref];
 		}
 		
 		$results = $this->executeDownMigrations($to_execute);
@@ -209,7 +194,7 @@ class MigrationManager
 		$results = array();
 		foreach ($migrations as $ref => $migration) {
 			$results[] = $migration->up();
-			$this->getAdapter()->addMigration($migration, $ref);
+			$this->getAdapter()->addMigration($migration->getImplementation(), $ref);
 		}
 		
 		return $results;
@@ -226,7 +211,7 @@ class MigrationManager
 		$results = array();
 		foreach ($migrations as $ref => $migration) {
 			$results[] = $migration->down();
-			$this->getAdapter()->removeMigration($migration, $ref);
+			$this->getAdapter()->removeMigration($migration->getImplementation(), $ref);
 		}
 		
 		return $results;
@@ -251,5 +236,21 @@ class MigrationManager
 			} );
 		}
 		
+	}
+	
+	/**
+	 * Go through the filter iterator and stores the fetched migration steps
+	 * in an associative array with the key holding the reference number for 
+	 * easy access.
+	 * @return array
+	 */
+	private function getMigrationSteps()
+	{
+		$migration_steps = array();
+		foreach ($this->getFilter() as $step) {
+			$migration_steps[$step->getReference()] = $step;
+		}
+		
+		return $migration_steps;
 	}
 }

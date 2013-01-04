@@ -8,6 +8,9 @@ namespace Phig;
  */
 interface AdapterInterface
 {
+	const UP = 'UP';
+	const DOWN = 'DW';
+	
 	/**
 	 * Returns all the executed migrations as an associative array.
 	 * The key holds the migration reference number

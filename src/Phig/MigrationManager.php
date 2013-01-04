@@ -59,7 +59,7 @@ class MigrationManager
 	 * migrations
 	 * @return boolean 
 	 */
-	public function isRollback($target)
+	public function isDownwards($target)
 	{
 		return null !== $target && $this->getFilter()->compare($target, $this->getGreatestMigration()) <= 0;
 	}
@@ -76,7 +76,7 @@ class MigrationManager
 		// for normal migration we need all files to target
 		// for rollbacks we need from target to the greatest migration
 		$filter = $this->getFilter();
-		if (!$this->isRollback($target)) {
+		if (!$this->isDownwards($target)) {
 			if (null !== $target) {
 				$filter->setToVersion($target);
 			}
@@ -89,7 +89,7 @@ class MigrationManager
 
 		// migrations to be executed
 		$to_execute = array();
-		if ($this->isRollback($target)) {
+		if ($this->isDownwards($target)) {
 			// rollback: execute the common part of $executed and $migration_refs
 			$executed = $this->getExecutedMigrations();
 			foreach($migration_steps as $ref => $migration_class) {
@@ -111,7 +111,7 @@ class MigrationManager
 		// sort migrations according to filter and target
 		// remove one so that to avoid executing target in the case of rollback
 		$this->sortMigrations($migrations, $target);
-		if ($this->isRollback($target)) {
+		if ($this->isDownwards($target)) {
 			array_pop($migrations);
 		}
 		return $migrations;
@@ -153,10 +153,10 @@ class MigrationManager
 			$target = key($migrations);
 		}
 		
-		if (!$this->isRollback($target)) {
-			return $this->executeUpMigrations($migrations);
+		if (!$this->isDownwards($target)) {
+			return $this->doMigration($migrations, AdapterInterface::UP);
 		} else {
-			return $this->executeDownMigrations($migrations);
+			return $this->doMigration($migrations, AdapterInterface::DOWN);
 		}
 	}
 	
@@ -177,7 +177,7 @@ class MigrationManager
 			$to_execute[$ref] = $migration_steps[$ref];
 		}
 		
-		$results = $this->executeDownMigrations($to_execute);
+		$results = $this->doMigration($to_execute, AdapterInterface::DOWN);
 		if ( $redo ) {
 			reset($migrations);
 			$target = key($migrations);
@@ -188,33 +188,25 @@ class MigrationManager
 	}
 	
 	/**
-	 * Calls the up method on the provided migrations 
-	 * and notifies the adapter to updated its list.
-	 * @param array $migrations
-	 */
-	protected function executeUpMigrations($migrations)
-	{
-		$results = array();
-		foreach ($migrations as $ref => $migration) {
-			$results[] = $migration->up();
-			$this->getAdapter()->addMigration($migration->getImplementation(), $ref);
-		}
-		
-		return $results;
-	}
-
-	/**
-	 * Calls the down method on the provided migrations 
-	 * and notifies the adapter to updated its list.
-	 * @param array $migrations
+	 * Calls the up or down method on the provided migrations 
+	 * and notifies the adapter to updated its list, 
+	 * based on the provided direction.
+	 * @param array $migrations migrations to be executed in that order
+	 * @param string $direction UP|DW 
 	 * @return array
 	 */
-	protected function executeDownMigrations($migrations)
+	private function doMigration($migrations, $direction)
 	{
+		$methods = array(
+			AdapterInterface::UP => array('up', 'addMigration'),
+			AdapterInterface::DOWN => array('down', 'removeMigration'),
+		);
+		
 		$results = array();
-		foreach ($migrations as $ref => $migration) {
-			$results[] = $migration->down();
-			$this->getAdapter()->removeMigration($migration->getImplementation(), $ref);
+		foreach($migrations as $ref => $migration) {
+			list($migration_method, $adapter_method) = $methods[$direction];
+			$results[] = call_user_func(array($migration, $migration_method));
+			call_user_func(array($this->getAdapter(), $adapter_method), $migration->getImplementation(), $ref);
 		}
 		
 		return $results;
@@ -231,7 +223,7 @@ class MigrationManager
 	private function sortMigrations(& $migrations, $target)
 	{
 		$filter = $this->getFilter();
-		if (!$this->isRollback($target)) {
+		if (!$this->isDownwards($target)) {
 			uksort($migrations, array($filter, 'compare'));
 		} else {
 			uksort($migrations, function($a, $b) use ($filter) {

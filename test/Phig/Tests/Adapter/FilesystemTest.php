@@ -11,7 +11,7 @@ class FilesystemTest extends \PHPUnit_Framework_TestCase
 	
 	public function setUp()
 	{
-		$this->adapter = new DummyFilesystem(TEST_DIR .'/samples/data.test');
+		$this->adapter = new DummyFilesystem(TEST_DIR .'/samples/datetime.db');
 	}
 	
 	/**
@@ -20,7 +20,7 @@ class FilesystemTest extends \PHPUnit_Framework_TestCase
      */
 	public function testGetSource()
 	{
-		$this->assertEquals($this->adapter->getSource(), TEST_DIR .'/samples/data.test'); 
+		$this->assertEquals($this->adapter->getSource(), TEST_DIR .'/samples/datetime.db'); 
 	}
 	
 	/**

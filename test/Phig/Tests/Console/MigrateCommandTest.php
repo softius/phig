@@ -6,12 +6,10 @@ use Symfony\Component\Console\Tester\CommandTester;
 
 class MigrateCommandTest extends \PHPUnit_Framework_TestCase
 {
-	private $app;
-	
 	public function getApp()
 	{
 		$mm = new \Phig\MigrationManager();
-		$mm->setAdapter(new \Phig\Tests\Adapter\Filesystem(TEST_DIR .'/samples/data.test'));
+		$mm->setAdapter(new \Phig\Tests\Adapter\Filesystem(TEST_DIR .'/samples/datetime.db'));
 		$mm->setFilter(new \Phig\Filter\DatetimeFilter(new \Phig\MigrationStepIterator(TEST_DIR.'/samples/datetime')));
 		
 		$app = new \Phig\Application();

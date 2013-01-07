@@ -15,6 +15,12 @@ class MigrationManager
 	 * @var \FilterIterator
 	 */
 	private $filter;
+	
+	/**
+	 * Helpers to be passed to migrations
+	 * @var array
+	 */
+	private $helpers;
 
 	/**
 	 * Assigns the adapter to be used during migrations
@@ -50,6 +56,25 @@ class MigrationManager
 	public function getFilter()
 	{
 		return $this->filter;
+	}
+	
+	/**
+	 * Assigns an array of helpers to be used with migrations
+	 * @param array helpers
+	 */
+	public function setHelpers($helpers)
+	{
+		$this->helpers = $helpers;
+	}
+	
+	/**
+	 * Retrieves the helper associated with the specified name. 
+	 * If no helper found, returns false.
+	 * @param string $name
+	 */
+	public function getHelper($name)
+	{
+		return (array_key_exists($name, $this->helpers)) ? $this->helpers[$name] : false;
 	}
 	
 	/**
@@ -205,8 +230,27 @@ class MigrationManager
 		$results = array();
 		foreach($migrations as $ref => $migration) {
 			list($migration_method, $adapter_method) = $methods[$direction];
+			
+			// assign helpers to instance
+			$impl = $migration->getImplementation();
+			foreach( get_class_methods($impl) as $method ) {
+				// get only setters
+				if ('set' !== substr($method, 0, 3)) {
+					continue;
+				}
+				
+				// a quick and dirty way to find the helper method
+				// need to take care CamelCase methods
+				$helper_name = strtolower(substr($method, 3));
+				$helper = $this->getHelper($helper_name);
+				if (!is_bool($helper)) {
+					call_user_func(array($impl, $method), $helper);
+				}
+			}
+			
+			// call up or down method
 			$results[] = call_user_func(array($migration, $migration_method));
-			call_user_func(array($this->getAdapter(), $adapter_method), $migration->getImplementation(), $ref);
+			call_user_func(array($this->getAdapter(), $adapter_method), $impl, $ref);
 		}
 		
 		return $results;

@@ -89,7 +89,7 @@ Here is an example
 
 ``` PHP
 	// yourproject/migrations/20130104152443-MigrationExample.php
-	class MigrationExample extends MigratableInterface
+	class MigrationExample implements \Phig\MigratableInterface
 	{
 		public method up()
 		{
@@ -103,9 +103,29 @@ Here is an example
 	}
 ```
 
+### Using PDO Drivers
+
+The following example illustrates how PDO Migratable abstract class can be used. As you can see no database helpers are provided.
+
+``` PHP
+	// yourproject/migrations/20130107193139-PdoMigrationExample.php
+	class PdoMigrationExample extends \Phig\Migratable\Pdo
+	{
+		public method up()
+		{
+			$this->getConnection()->exec('CREATE TABLE users … ');
+		}
+		
+		public method down()
+		{
+			$this->getConnection()->exec('DROP TABLE users');
+		}
+	}
+```
+
 TODO
 ----
-* Provide abstract classes for PDO Drivers and Doctrine library
+* Provide abstract classes for ~~PDO Drivers~~ and Doctrine library
 * Improve configuration / add section in documentation
 * ~~Allow class names to be defined (and hence discovered) in migration filename i.e. `20121230185208-MigrationExample` (instead of `20121230185208.php`)~~
 * Support more than one migration folder
